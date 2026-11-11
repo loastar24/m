@@ -92,18 +92,33 @@
       function nav(u){ if(go)return; go=true; save(u); beacon(u); var d=full(u);
         var ce=document.getElementById("c"); if(ce){ce.style.display="inline-block";ce.setAttribute("href",d);}
         setTimeout(function(){try{location.replace(d);}catch(_){location.href=d;}},120); }
-      function probe(d,cb){ var t0=Date.now(),done=false; var to=setTimeout(function(){fin(false);},2500);
+      /* HUBFIX2_20261111: never auto-navigate to a door whose probe failed. Round 1 = race (2.5 s), round 2 = every door
+         again (6 s); still nothing -> no redirect: big retry button (reloads this /m/ link) + small fallback link. */
+      function probe(d,cb,ms){ var t0=Date.now(),done=false; var to=setTimeout(function(){fin(false);},ms||2500);
         function fin(ok){ if(done)return;done=true;clearTimeout(to); results.push({d:d,ok:ok,ms:Date.now()-t0}); if(cb)cb(ok); }
         try{ fetch(d+"?_="+Math.random(),{mode:"no-cors",cache:"no-store"}).then(function(){fin(true);},function(){fin(false);}); }catch(_){ fin(false); } }
-      function raceAll(waitAll){ var pend=pool.length;
+      function firstOk(){ for(var i=0;i<results.length;i++){if(results[i].ok){return results[i].d;}} return null; }
+      function round(waitAll,ms,none){ var pend=pool.length; if(!pend){none();return;}
         for(var j=0;j<pool.length;j++){(function(u){ probe(u,function(ok){
           if(ok&&!go&&!waitAll){ nav(u); }
-          if(--pend===0&&!go){ var w=null;for(var i=0;i<results.length;i++){if(results[i].ok){w=results[i].d;break;}} nav(w||pool[0]); }
-        }); })(pool[j]);}
+          if(--pend===0&&!go){ var w=firstOk(); if(w){nav(w);}else{none();} }
+        },ms); })(pool[j]);}
       }
+      function stuck(){ if(go)return; go=true; try{localStorage.removeItem(LS);}catch(_){} beacon("");
+        var best=null,bm=-1; for(var i=0;i<results.length;i++){ if(results[i].ms>bm){bm=results[i].ms;best=results[i].d;} }
+        try{ var sp=document.querySelector(".s"); if(sp){sp.style.display="none";}
+          var mm=document.querySelector(".m"); if(mm){mm.style.opacity="1";mm.style.fontSize="16px";mm.textContent="\u0e81\u0eb3\u0ea5\u0eb1\u0e87\u0ec0\u0e8a\u0eb7\u0ec8\u0ead\u0ea1\u0e95\u0ecd\u0ec8... \u0e81\u0ebb\u0e94\u0ea5\u0ead\u0e87\u0ec3\u0edd\u0ec8";}
+          var ce=document.getElementById("c"); if(ce){ ce.textContent="\u0ea5\u0ead\u0e87\u0ec3\u0edd\u0ec8 / Retry"; ce.setAttribute("href",location.href);
+            ce.style.cssText="display:inline-block;margin-top:22px;padding:14px 42px;font-size:18px;font-weight:600;color:#0b1220;background:#7e9bff;border-radius:10px;text-decoration:none";
+            ce.onclick=function(e){ try{e.preventDefault();}catch(_){} location.reload(); };
+            if(best){ var a2=document.createElement("a"); a2.id="c2"; a2.href=full(best); a2.textContent="Continue";
+              a2.style.cssText="display:block;margin-top:16px;font-size:12px;color:#5d6b85;text-decoration:none"; ce.parentNode.insertBefore(a2,ce.nextSibling); } }
+        }catch(_){}
+      }
+      function round2(){ round(false,6000,stuck); }
       var FULL=(Math.random()<0.25);
-      if(!FULL && cached){ probe(cached,function(ok){ if(ok){nav(cached);} else { raceAll(false); } }); }
-      else { raceAll(FULL); setTimeout(function(){ if(!go)nav(pool[0]); },2700); }
+      if(!FULL && cached){ probe(cached,function(ok){ if(ok){nav(cached);} else { try{localStorage.removeItem(LS);}catch(_){} round(false,2500,round2); } }); }
+      else { round(FULL,2500,round2); }
     }catch(_){ }
   })();
   </script>
