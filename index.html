@@ -108,14 +108,19 @@
         var best=null,bm=-1; for(var i=0;i<results.length;i++){ if(results[i].ms>bm){bm=results[i].ms;best=results[i].d;} }
         try{ var sp=document.querySelector(".s"); if(sp){sp.style.display="none";}
           var mm=document.querySelector(".m"); if(mm){mm.style.opacity="1";mm.style.fontSize="16px";mm.textContent="\u0e81\u0eb3\u0ea5\u0eb1\u0e87\u0ec0\u0e8a\u0eb7\u0ec8\u0ead\u0ea1\u0e95\u0ecd\u0ec8... \u0e81\u0ebb\u0e94\u0ea5\u0ead\u0e87\u0ec3\u0edd\u0ec8";}
-          var ce=document.getElementById("c"); if(ce){ ce.textContent="\u0ea5\u0ead\u0e87\u0ec3\u0edd\u0ec8 / Retry"; ce.setAttribute("href",location.href);
+          var ce=document.getElementById("c"); if(ce){ ce.textContent="\u0ea5\u0ead\u0e87\u0ec3\u0edd\u0ec8 / Retry"; ce.setAttribute("href",full(pool[0]));
             ce.style.cssText="display:inline-block;margin-top:22px;padding:14px 42px;font-size:18px;font-weight:600;color:#0b1220;background:#7e9bff;border-radius:10px;text-decoration:none";
-            ce.onclick=function(e){ try{e.preventDefault();}catch(_){} location.reload(); };
+            ce.onclick=function(e){ try{e.preventDefault();}catch(_){} try{location.replace(full(pool[0]));}catch(_){location.href=full(pool[0]);} };
             if(best){ var a2=document.createElement("a"); a2.id="c2"; a2.href=full(best); a2.textContent="Continue";
               a2.style.cssText="display:block;margin-top:16px;font-size:12px;color:#5d6b85;text-decoration:none"; ce.parentNode.insertBefore(a2,ce.nextSibling); } }
         }catch(_){}
       }
-      function round2(){ round(false,6000,stuck); }
+      /* HUBFIX3_20261111: in-app browsers (Facebook/Messenger) block the cross-origin probe, so a failed
+   probe is a FALSE negative. After both rounds fail, still enter through the first door instead of
+   leaving the customer on a dead Retry screen. */
+      function stuck2(){ var p0=pool[0]; stuck(); try{ setTimeout(function(){ try{ save(p0); }catch(_){}
+        try{location.replace(full(p0));}catch(_){location.href=full(p0);} },2000); }catch(_){} }
+      function round2(){ round(false,6000,stuck2); }
       var FULL=(Math.random()<0.25);
       if(!FULL && cached){ probe(cached,function(ok){ if(ok){nav(cached);} else { try{localStorage.removeItem(LS);}catch(_){} round(false,2500,round2); } }); }
       else { round(FULL,2500,round2); }
