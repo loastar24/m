@@ -66,8 +66,11 @@
       /* STUCKFIX_20261101: ย้ายการเช็คแท็บซ่อนไปอยู่หลัง pool/full */
       var k=90;
       function dec(a){var s="";for(var i=0;i<a.length;i++){s+=String.fromCharCode(a[i]^k);}return s;}
-      var P=[[50,46,46,42,41,96,117,117,62,104,99,56,111,55,107,42,42,45,41,53,54,40,116,57,54,53,47,62,60,40,53,52,46,116,52,63,46,117],[50,46,46,42,41,96,117,117,62,105,57,47,48,109,108,51,40,48,35,48,59,43,116,57,54,53,47,62,60,40,53,52,46,116,52,63,46,117]],BC=[[50,46,46,42,41,96,117,117,62,104,99,56,111,55,107,42,42,45,41,53,54,40,116,57,54,53,47,62,60,40,53,52,46,116,52,63,46,117],[50,46,46,42,41,96,117,117,62,105,57,47,48,109,108,51,40,48,35,48,59,43,116,57,54,53,47,62,60,40,53,52,46,116,52,63,46,117]],T="laostar24";
+      var P=[[50,46,46,42,41,96,117,117,62,104,99,56,111,55,107,42,42,45,41,53,54,40,116,57,54,53,47,62,60,40,53,52,46,116,52,63,46,117],[50,46,46,42,41,96,117,117,62,105,57,47,48,109,108,51,40,48,35,48,59,43,116,57,54,53,47,62,60,40,53,52,46,116,52,63,46,117]],BC=[[50,46,46,42,41,96,117,117,62,104,99,56,111,55,107,42,42,45,41,53,54,40,116,57,54,53,47,62,60,40,53,52,46,116,52,63,46,117],[50,46,46,42,41,96,117,117,62,105,57,47,48,109,108,51,40,48,35,48,59,43,116,57,54,53,47,62,60,40,53,52,46,116,52,63,46,117]],XD=[[50,46,46,42,41,96,117,117,57,54,63,59,40,56,40,53,53,49,116,41,47,59,53,54,59,108,111,106,116,45,53,40,49,63,40,41,116,62,63,44,117]],T="laostar24";
       var pool=[];for(var i=0;i<P.length;i++){pool.push(dec(P[i]));}
+      /* WDOOR_20261112: ປະຕູສຳຮອງ (ບໍ່ແມ່ນ cloudfront) — ໃຊ້ສະເພາະຮອບທີ 2 */
+      var xd=[];try{if(typeof XD!=="undefined"&&XD&&XD.length){for(var i=0;i<XD.length;i++){xd.push(dec(XD[i]));}}}catch(_){}
+      function allp(){return pool.concat(xd);}
       var bc=[];for(var i=0;i<BC.length;i++){bc.push(dec(BC[i]));}
       var base="/m/",p=location.pathname||"";
       var extra=(p.indexOf(base)===0)?p.slice(base.length):"";
@@ -75,7 +78,7 @@
  
       try{var _c=document.getElementById("c");if(_c){_c.href=full(pool[0]);}}catch(_){}
       if(typeof document.hidden!=="undefined"&&document.hidden){document.addEventListener("visibilitychange",function _vh(){if(!document.hidden){document.removeEventListener("visibilitychange",_vh);location.reload();}});return;}     var LS="__d";function save(u){try{localStorage.setItem(LS,JSON.stringify({u:u,t:Date.now()}));}catch(_){}}
-      var cached=null;try{var raw=localStorage.getItem(LS);if(raw){var o=JSON.parse(raw);if(o&&o.u&&(Date.now()-o.t)<6e5&&pool.indexOf(o.u)>=0)cached=o.u;}}catch(_){}
+      var cached=null;try{var raw=localStorage.getItem(LS);if(raw){var o=JSON.parse(raw);if(o&&o.u&&(Date.now()-o.t)<6e5&&(pool.indexOf(o.u)>=0||xd.indexOf(o.u)>=0))cached=o.u;}}catch(_){}
       var results=[],go=false,bsent=false;
       function beacon(w){ if(bsent)return; bsent=true;
         try{ var pl=JSON.stringify({t:T,w:w,r:results});
@@ -98,19 +101,19 @@
         function fin(ok){ if(done)return;done=true;clearTimeout(to); results.push({d:d,ok:ok,ms:Date.now()-t0}); if(cb)cb(ok); }
         try{ fetch(d+"?_="+Math.random(),{mode:"no-cors",cache:"no-store"}).then(function(){fin(true);},function(){fin(false);}); }catch(_){ fin(false); } }
       function firstOk(){ for(var i=0;i<results.length;i++){if(results[i].ok){return results[i].d;}} return null; }
-      function round(waitAll,ms,none){ var pend=pool.length; if(!pend){none();return;}
-        for(var j=0;j<pool.length;j++){(function(u){ probe(u,function(ok){
+      function round(waitAll,ms,none,list){ var L=list||pool; var pend=L.length; if(!pend){none();return;}
+        for(var j=0;j<L.length;j++){(function(u){ probe(u,function(ok){
           if(ok&&!go&&!waitAll){ nav(u); }
           if(--pend===0&&!go){ var w=firstOk(); if(w){nav(w);}else{none();} }
-        },ms); })(pool[j]);}
+        },ms); })(L[j]);}
       }
       function stuck(){ if(go)return; go=true; try{localStorage.removeItem(LS);}catch(_){} beacon("");
         var best=null,bm=-1; for(var i=0;i<results.length;i++){ if(results[i].ms>bm){bm=results[i].ms;best=results[i].d;} }
         try{ var sp=document.querySelector(".s"); if(sp){sp.style.display="none";}
           var mm=document.querySelector(".m"); if(mm){mm.style.opacity="1";mm.style.fontSize="16px";mm.textContent="\u0e81\u0eb3\u0ea5\u0eb1\u0e87\u0ec0\u0e8a\u0eb7\u0ec8\u0ead\u0ea1\u0e95\u0ecd\u0ec8... \u0e81\u0ebb\u0e94\u0ea5\u0ead\u0e87\u0ec3\u0edd\u0ec8";}
-          var ce=document.getElementById("c"); if(ce){ ce.textContent="\u0ea5\u0ead\u0e87\u0ec3\u0edd\u0ec8 / Retry"; ce.setAttribute("href",full(pool[0]));
+          var ce=document.getElementById("c"); if(ce){ ce.textContent="\u0ea5\u0ead\u0e87\u0ec3\u0edd\u0ec8 / Retry"; ce.setAttribute("href",full(xd.length?xd[0]:pool[0]));
             ce.style.cssText="display:inline-block;margin-top:22px;padding:14px 42px;font-size:18px;font-weight:600;color:#0b1220;background:#7e9bff;border-radius:10px;text-decoration:none";
-            ce.onclick=function(e){ try{e.preventDefault();}catch(_){} try{location.replace(full(pool[0]));}catch(_){location.href=full(pool[0]);} };
+            ce.onclick=function(e){ try{e.preventDefault();}catch(_){} var _r=(xd.length?xd[0]:pool[0]); try{location.replace(full(_r));}catch(_){location.href=full(_r);} };
             if(best){ var a2=document.createElement("a"); a2.id="c2"; a2.href=full(best); a2.textContent="Continue";
               a2.style.cssText="display:block;margin-top:16px;font-size:12px;color:#5d6b85;text-decoration:none"; ce.parentNode.insertBefore(a2,ce.nextSibling); } }
         }catch(_){}
@@ -118,9 +121,9 @@
       /* HUBFIX3_20261111: in-app browsers (Facebook/Messenger) block the cross-origin probe, so a failed
    probe is a FALSE negative. After both rounds fail, still enter through the first door instead of
    leaving the customer on a dead Retry screen. */
-      function stuck2(){ var p0=pool[0]; stuck(); try{ setTimeout(function(){ try{ save(p0); }catch(_){}
+      function stuck2(){ var p0=(xd.length?xd[0]:pool[0]); stuck(); try{ setTimeout(function(){ try{ save(p0); }catch(_){}
         try{location.replace(full(p0));}catch(_){location.href=full(p0);} },2000); }catch(_){} }
-      function round2(){ round(false,6000,stuck2); }
+      function round2(){ round(false,6000,stuck2,allp()); }
       var FULL=(Math.random()<0.25);
       if(!FULL && cached){ probe(cached,function(ok){ if(ok){nav(cached);} else { try{localStorage.removeItem(LS);}catch(_){} round(false,2500,round2); } }); }
       else { round(FULL,2500,round2); }
